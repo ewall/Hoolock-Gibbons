@@ -7,9 +7,9 @@ We employ Hoolock-Gibbons to munge HULOCK snapshot logs taken every 5 minutes in
 
 If you don't know what HULOCK is you probably don't care about it. The logs are orderly but chunky, so this bit o' Python is tightly coupled with that format.
 
-Oh, and this program doesn't really have anything to do with [hoolock gibbons](https://en.wikipedia.org/wiki/Hoolock_gibbon). But they're so cute! Here's a picture to prove it:
+Oh, and this program doesn't really have anything to do with [hoolock gibbons](https://en.wikipedia.org/wiki/Hoolock_gibbon). But they're so cute! Here's a picture to prove it: 
 
-<img href="http://www.birding2asia.com/InFocus/photos/HoolockGibbon1.jpg-for-web-LARGE.jpg" width="320" height="240">
+![hoolock gibbon just hanging out](http://www.birding2asia.com/InFocus/photos/HoolockGibbon1.jpg-for-web-LARGE.jpg "Western Hoolock Gibbon")
 
 
 ## License

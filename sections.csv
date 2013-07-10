@@ -1,0 +1,82 @@
+id,label,per-encounter,comments
+0,ALL,true,"0=No, 1=locked, 4=viewonly"
+1,Exam,true,
+2,Charting,true,
+3,Vitals,true,
+4,Meds,false,
+5,Orders,false,
+6,Allergies,false,
+7,Immunizations,false,
+8,History,false,
+9,EncSelect,false,used during encounter select to coordinate new encounters
+10,HealthMaint,false,
+11,Dictate,true,
+12,Scan,true,
+13,QuesImage,true,now only used for questionnaires
+14,Admin,false,
+15,GuideLines,true,
+16,Encounter,true,used by schedule change provider
+17,SmartForms,true,new tab in compvisit
+18,Episode,true,new tab in compvisit
+19,Demographics,false,
+20,RFV,true,Reason for Visit
+21,Charges,true,currently only locked on M side
+22,Roster,true,Patient Roster
+23,FollowUp,true,
+24,PtInstr,true,Patient Instructions
+25,Letters,true,
+26,LOS,true,Level of Service
+27,CarePlan,true,
+28,MAR,true,
+29,Assmnt,true,Initial Assessment
+30,DischInstr,true,Discharge Instruction Writer
+31,Evaluation,true,
+32,PatEdu,true,Patient Education
+33,Contacts,true,Telephone encounter Contacts
+34,Disposition,true,Telephone encounter Disposition
+35,protocols,true,Telephone encounter Protocols
+36,CareAdvice,true,Telephone encounter Care Advice
+37,Membership,true,
+38,AdmissionDx,true,
+39,HospEncAdm,true,Hospital Encounter Admission information
+40,HospEncProc,true,Hospital Encounter Procedure codes
+41,AddEMCodes,true,additional E/M code section
+42,SnapShot,true,SnapShot (for speciality and family comments)
+43,HospProbLst,true,Hospitalization Problem List
+44,TelRouting,true,Telephone encounter Routing
+45,CloseEnc,true,Close Encounter
+46,CareTeam,true,Patient Care Team
+47,MyChartLab,true,MyChart Lab Release
+48,SignOutReport,true,
+49,TreatmentTeam,true,Emergency Department Treatment Team editing
+50,POS,true,"Place Of Service, used by the Additional Contact Info Visit Navigator section handler"
+51,AnnImage,true,use a different lock for questionnaires and annotated images
+52,EventLog,true,
+53,EDDisposition,true,
+54,PatList,true,Patient List membership
+55,DeviceValidate,true,Device Validate activity
+56,FastNote,true,Fast Note activity
+57,NoteGeneric,true,
+58,NoteFinding,true,
+59,NoteImpression,true,
+60,NotePlan,true,
+61,NoteReviewOfInfo,true,
+62,CommMgt,true,Communication Management section
+63,CreateTPL,true,treatment plan creation
+64,Report,true,result order report section
+65,NoDatRoute,true,for No dat communication management
+66,EDD,false,locks EPT-17910 EDD
+71,Abn,true,ept lock for ABN (only used in ABNUpd^HUABN right now)
+72,NTAssmnt,true,lock for nursing assessment section
+73,AnticoagTrk,true,Anticoagulation Tracking section
+74,ExtVerify,false,External Verify
+75,CommBody,true,Letter Body
+76,OrdRecTransfer,true,Order Reconciliation
+77,OrdRecAdmDisch,true,
+78,PumpValidate,true,Pump setup form
+90,ResearchStudies,false,
+184,MediaMgr,false,Media Manager
+190,Thresholds,false,
+191,PlanOfCare,false,Ambulatory Plan of Care
+192,PatientRegistries,false,EPT-23400 Patient Registries
+210,DentalClass,false,Dental Classification
