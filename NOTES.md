@@ -57,7 +57,7 @@ comments:
     line = Z18690|MR:prd-64815294| 900472^62993,44840[EDT^prd-64815294^prd-|TCP|5001|64815294^MSO3259^1
 
     line.split('|')
-      00 = Z18690             -> patient_record
+      00 = Z18690             -> patient_record = str.strip('Z')
       01 = MR:prd-64815294    -> app = split(':')[0]
         split(':')
           00 = MR             -> app
@@ -90,7 +90,7 @@ DATA STRUCTURES
 - splitPrev = split list from the previous line
 - splitCur = split of current line
 
-### dframe ([pandas.DataFrame](http://pandas.pydata.org/pandas-docs/stable/dsintro.html#dataframe))
+### dframe: ([pandas.DataFrame](http://pandas.pydata.org/pandas-docs/stable/dsintro.html#dataframe))
 
 - (index) = unique incrementing integer id/index
 - patient_record = patient record in lock contention
@@ -98,24 +98,75 @@ DATA STRUCTURES
 - process_id = Hyperspace process number for blocking user
 - workstation = where Hyperspace process is coming from
 - app = Epic app (marginally useful)
+- activity = activity/workflow being blocked
 - first_seen = timestamp of the first file with this lock
 - last_seen = timestamp of the last file with this lock (may be same as first_seen)
-
-##### TBD:
-- activities = multiple-item list of the locked activities/workflows (pipe-separated?)
-  ***or should we make a separate lock for each locked activity?
 - total_minutes = time in minutes (convenience entry)
 - seconds_since_midnight = useful for easy grouping by shifts? (only stored with first_seen time)
 
 ### activities:
-
-(see `sections.csv`, first line is labels)
-- [ ] TODO: rename `sections.csv` to `activities.csv`
+(see `activities.csv`, first line is labels)
 
 - id = integer; the activity id mentioned in line type (b)
 - label = string; name of locked activity, short enough to use as chart keys
 - per-encounter = boolean; if true this lock only effects one encounter, otherwise it locks for all
 - comments = string; misc details
+
+### experimenting with auto-increment id
+[reference](http://stackoverflow.com/questions/14778042/)
+
+    labels = ['pt_rec', 'proc_id', 'app']
+
+    row1 = { 'pt_rec': 'Z00001', 'proc_id':1, 'app':'MR' }
+    row2 = { 'pt_rec': 'Z00002', 'proc_id':2, 'app':'MR' }
+
+    df = pd.DataFrame([row1, row2])
+
+    row3 = pd.Series(['Z00003', 3, 'ADT'], labels)
+    df.append(row3, ignore_index=True)
+
+    list4 = ['Z00004', 4, 'MR']
+    df.append(list4, labels)                                        --> FAIL!
+
+    df4 = pd.DataFrame(['Z00004', 4, 'MR'], index=labels
+    df.append(df4, ignore_index=True)                               --> FAIL!
+
+    s4 = pd.Series({ 'pt_rec': 'Z00004', 'proc_id':4, 'app':'MR' }))
+
+    labels = ['pt_rec', 'proc_id", 'app']
+
+    row1 = { 'pt_rec': 'Z00001', 'proc_id':1, 'app':'MR' }
+    row2 = { 'pt_rec': 'Z00002', 'proc_id':2, 'app':'MR' }
+
+    df = pd.DataFrame([row1, row2])
+
+    row3 = pd.Series(['Z00003', 3, 'ADT'], labels)
+    df = df.append(row3, ignore_index=True)							            --> GOOD
+
+    list4 = ['Z00004', 4, 'MR']
+    df.append(list4, labels)										                    --> FAIL!
+
+    df4 = pd.DataFrame(['Z00004', 4, 'MR'], index=labels)
+    df.append(df4, ignore_index=True)								                --> FAIL!
+    * df4 looks like rows & columns are swapped, transpose first
+    df.append(df4.T, ignore_index=True)								              --> FAIL!
+
+    s4 = pd.Series({ 'pt_rec': 'Z00004', 'proc_id':4, 'app':'MR' })	--> GOOD!
+    df = df.append(s4, ignore_index=True)
+
+    last_index = len(df)-1
+    last_row = df.iloc[-1]
+
+##### conclusion:
+
+- build temporary record as a pd.Series, then append to the big DataFrame with `ignore_index=True`
+- after appending a single row, the index is `len(dframe)-1`
+- to get a row by index, use `df.iloc[#]`
+
+### create empty DataFrame to start with
+see [here](http://technicaltidbit.blogspot.com/2013/06/create-empty-dataframe-in-pandas.html) and [here](http://docs.scipy.org/doc/numpy/reference/arrays.dtypes.html)
+
+    index_labels = ['pt_record', 'proc_id', 'user_id', 'workstation', 'app', 'activity', 'first_seen', 'last_seen', 'total_min', 'sec_since_midnight']
 
 
 PSEUDOCODE
@@ -130,7 +181,7 @@ PSEUDOCODE
           - dframe.process_id
           - dframe.workstation
           - dframe.app
-          - dframe.activities *sorted for comparison?
+          - dframe.activity
         else return Nothing
 
     get log file names
@@ -150,24 +201,24 @@ PSEUDOCODE
         continue
 
       if len(splitCur)==6:
-        create dframe from splitCur
+        create series from splitCur
 
-        if carryover(dframe) returns id:
+        if carryover(dframe, series) returns id:
           dframe(id).last_seen = timestamp
           dframe(id).total_time += 5
-          save dframe
           loggedCur.append(id)
 
         else: #not a carryover
-          new_index = *how???
-          dframe(new_index).first_seen = timestamp
-          dframe(new_index).last_seen = timestamp
-          dframe(new_index).total_time = 5
-          save dframe
-          loggedCur.append(new_index)
+          foreach activity in activities:
+            series[activity] = activity #lookup activity name or stick with id?
+            series[first_seen] = timestamp
+            series[last_seen] = timestamp
+            series[total_time] = 5
+            append series to dframe
+            last_index = len(dframe)-1
+            loggedCur.append(last_index)
 
       next line
       close log file
       loggedPrev = loggedCur
       loggedCur = empty
-    next log file
