@@ -19,10 +19,13 @@ You should have received a copy of the GNU General Public License
 along with Hoolock-Gibbons.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+import csv
+import exceptions
 import os
 import numpy as np
 import pandas as pd
 import re
+from collections import defaultdict
 from datetime import datetime
 
 # constants:
@@ -37,7 +40,7 @@ data_types = [ ('pt_record', 'u4'),
                ('user_id', 'u4'),
                ('workstation', 'S32'),
                ('app', 'S16'),
-               ('activity', 'u2'),
+               ('activity', 'S128'),
                ('first_seen', 'M8'),
                ('last_seen', 'M8'),
                ('total_min', 'u2'),
@@ -46,9 +49,18 @@ data_types = [ ('pt_record', 'u4'),
 # set up variables:
 dframe = pd.DataFrame(np.zeros(0,dtype=data_types))
 
-# start:
-os.chdir('F:/dev/Hoolock-Gibbons/logs') #change back!
+# check your path!
+os.chdir('F:/dev/Hoolock-Gibbons/logs')
 
+# read in activity_names lookup
+activity_names = defaultdict(lambda: 'UNKNOWN')
+with open('../activities.csv', 'rb') as infile:
+  reader = csv.reader(infile, delimiter=',', quotechar='"')
+  reader.next() #skip header
+  for rline in reader:
+    activity_names[ int(rline[0]) ] = rline[1]
+
+# read in data files
 for filename in sorted(os.listdir('.')):
     if in_pattern.match(filename) is not None:
         
@@ -85,15 +97,23 @@ for filename in sorted(os.listdir('.')):
                 if act_ids==[]: act_ids = [""] #empty is valid
                 for act_id in act_ids:
                 
-                    # TODO: lookup activity name
-                    #activity = activities[act_id]
-                    activity = "unknown"
+                    # lookup activity name
+                    if act_id=="": 
+                        activity=""
+                    else:
+                        try:
+                            id = int(act_id)
+                        except ValueError:
+                            id = 999999999
+                        activity = activity_names[id]
                     
                     # find our relevant data
-                    ptrec = splitCur[0].strip(' Z')
+                    ptrec = int(splitCur[0].strip(' Z'))
                     procid, work = splitCur[5].split('^')[:2]
+                    procid = int(procid)
                     userid, secs = splitCur[2].split('^')[:2]
-                    secs = secs[ secs.find(',')+1 : secs.find('[') ]
+                    userid = int(userid)
+                    secs = int(secs[ secs.find(',')+1 : secs.find('[') ])
                     app = splitCur[1].split(':')[0]
                     
                     # create data row
