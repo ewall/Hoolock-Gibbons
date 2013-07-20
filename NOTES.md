@@ -190,35 +190,39 @@ PSEUDOCODE
       open log file
       get timestamp from log file name
       line = readline
-      splitCur = line.split('|')
+        splitCur = line.split('|')
 
-      if len(splitCur)==3:
-        splitPrev, activities = splitCur, []
-        continue
+        if len(splitCur)==3:
+          splitPrev, activities = splitCur, []
+          continue
 
-      if len(splitCur)==5 & splitCur[3]!="":
-        activities.append(splitCur[3])
-        continue
+        if len(splitCur)==5 & splitCur[3]!="":
+          activities.append(splitCur[3])
+          continue
 
-      if len(splitCur)==6:
-        create series from splitCur
-
-        if carryover(dframe, series) returns id:
-          dframe(id).last_seen = timestamp
-          dframe(id).total_time += 5
-          loggedCur.append(id)
-
-        else: #not a carryover
+        if len(splitCur)==6:
           foreach activity in activities:
-            series[activity] = activity #lookup activity name or stick with id?
-            series[first_seen] = timestamp
-            series[last_seen] = timestamp
-            series[total_time] = 5
-            append series to dframe
-            last_index = len(dframe)-1
-            loggedCur.append(last_index)
 
+            create series from splitCur
+
+            if carryover(dframe, series) returns id:
+              dframe(id).last_seen = timestamp
+              dframe(id).total_time += 5
+              loggedCur.append(id)
+
+            else: #not a carryover
+                series[activity] = activity #lookup activity name or stick with id?
+                series[first_seen] = timestamp
+                series[last_seen] = timestamp
+                series[total_time] = 5
+                append series to dframe
+                last_index = len(dframe)-1
+                loggedCur.append(last_index)
+                
+          next activity      
       next line
-      close log file
-      loggedPrev = loggedCur
-      loggedCur = empty
+
+    close log file
+    loggedPrev = loggedCur
+    loggedCur = empty
+    next file
