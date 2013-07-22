@@ -31,7 +31,7 @@ from datetime import datetime
 # constants:
 debug = False
 
-logs_dir = '/Volumes/Spare Partition/LockLogs/week1'
+logs_dir = '/Volumes/Spare Partition/LockLogs/test'
 data_file = logs_dir + '/data/dframe.pickle'
 
 in_pattern = re.compile(r'\d{4}-\d{2}-\d{2}T\d{4}.txt', re.I)
@@ -155,6 +155,7 @@ if __name__=="__main__":
                             record = dframe.iloc[result]
                             record['last_seen'] = tstamp
                             record['total_min'] += 5
+                            loggedCur.append(result) #remember it for next file loop
                             if debug: print "      * updated previous record:",result,"for activity:",activity
 
                         else: #create new record
