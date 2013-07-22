@@ -87,7 +87,7 @@ DATA STRUCTURES
 
 - loggedPrev = list of record ids that were recorded from the last log file
 - loggedCur = list of record ids logged on this loop, will become loggedPrev on the next loop
-- splitPrev = split list from the previous line
+- splitPrev = split list from the previous line, could be used to confirm we're still on the same patient
 - splitCur = split of current line
 
 ### dframe: ([pandas.DataFrame](http://pandas.pydata.org/pandas-docs/stable/dsintro.html#dataframe))
@@ -201,8 +201,11 @@ PSEUDOCODE
           continue
 
         if len(splitCur)==6:
+          if splitCur[0,1,5] != splitPrev[0,1,5]): activities=[]
+          
+          get values
+          
           foreach activity in activities:
-
             create series from splitCur
 
             if carryover(dframe, series) returns id:

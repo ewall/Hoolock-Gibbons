@@ -35,4 +35,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
 ## Usage
-TBD
+- renameLogs.py: rename from old unsortable names
+- importFiles.py: read in the logs and build a DataFrame
+
+
+## TO DO
+- [X] rename files
+- [X] import/build DataFrame
+- [ ] save DataFrame in a reusable format
+- [ ] first set of stats & charts
+- [ ] dig deeper into outliers

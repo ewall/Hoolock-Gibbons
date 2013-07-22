@@ -20,7 +20,6 @@ along with Hoolock-Gibbons.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 import csv
-import exceptions
 import os
 import numpy as np
 import pandas as pd
@@ -28,12 +27,13 @@ import re
 from collections import defaultdict
 from datetime import datetime
 
+
 # constants:
-debug = True
+debug = False
 in_pattern = re.compile(r'\d{4}-\d{2}-\d{2}T\d{4}.txt', re.I)
 in_strptime = '%Y-%m-%dT%H%M.txt'
 
-index_labels = ['pt_record', 'proc_id', 'user_id', 'workstation', 'app', 'activity', 
+index_labels = ['pt_record', 'proc_id', 'user_id', 'workstation', 'app', 'activity',
                 'first_seen', 'last_seen', 'total_min', 'sec_since_midnight']
 data_types = [ ('pt_record', 'u4'),
                ('proc_id', 'u4'),
@@ -49,64 +49,65 @@ data_types = [ ('pt_record', 'u4'),
 # set up variables:
 dframe = pd.DataFrame(np.zeros(0,dtype=data_types))
 
-# check your path!
-os.chdir('F:/dev/Hoolock-Gibbons/logs')
 
-# read in activity_names lookup
-activity_names = defaultdict(lambda: 'UNKNOWN')
-with open('../activities.csv', 'rb') as infile:
-  reader = csv.reader(infile, delimiter=',', quotechar='"')
-  reader.next() #skip header
-  for rline in reader:
-    activity_names[ int(rline[0]) ] = rline[1]
+def carryover(s,df,ids):
+    # see if pd.Series `s` matches any ids in pd.DataFrame `df` from the last run
+    for id in ids:
+        r = df.iloc[id]
+        if (r['pt_record']==s['pt_record'] and
+            r['proc_id']==s['proc_id'] and
+            r['user_id']==s['user_id'] and
+            r['workstation']==s['workstation'] and
+            r['app']==s['app'] and
+            r['activity']==s['activity'] ):
+            return id
+    return None
 
-# read in data files
-for filename in sorted(os.listdir('.')):
-    if in_pattern.match(filename) is not None:
-        
-        # get timestamp
-        dt = datetime.strptime(filename, in_strptime)
-        tstamp = np.datetime64(dt.isoformat()) 
-        
-        # init empty vars
-        splitPrev, act_ids, loggedCur, loggedPrev = [], [], [], []
-        #?
-        
-        fileobj = open(filename, 'r')
-        if debug: print "FILE:",filename
-        for line in fileobj.readlines():
-            splitCur = line.split('|')
-            
-            # line is starting new subject
-            if len(splitCur)==3:
-                splitPrev, act_ids = splitCur, []
-                if debug: print 'reset'
-                continue
-                
-            # line shows activity_id
-            elif len(splitCur)==5 and splitCur[3]!="":       
-                act_ids.append(splitCur[3])
-                if debug: print 'activity'
-                continue
-            
-            # line gives details on lock holder
-            elif len(splitCur)==6:
-                if debug: print 'details'
-                
-                # locks for each activity are separate
-                if act_ids==[]: act_ids = [""] #empty is valid
-                for act_id in act_ids:
-                
-                    # lookup activity name
-                    if act_id=="": 
-                        activity=""
-                    else:
-                        try:
-                            id = int(act_id)
-                        except ValueError:
-                            id = 999999999
-                        activity = activity_names[id]
-                    
+
+if __name__=="__main__":
+
+    # check your path!
+    os.chdir('F:/dev/Hoolock-Gibbons/logs')
+
+    # read in activity_names lookup
+    activity_names = defaultdict(lambda: 'UNKNOWN')
+    #activity_names[111111111] = '(none)' #just viewing MR
+    with open('../activities.csv', 'rb') as infile:
+        reader = csv.reader(infile, delimiter=',', quotechar='"')
+        reader.next() #skip header
+        for rline in reader:
+            activity_names[ int(rline[0]) ] = rline[1] #build dict
+
+    # init empty var
+    loggedPrev = []
+
+    # read in data files
+    for filename in sorted(os.listdir('.')):
+        if in_pattern.match(filename) is not None:
+
+            # get timestamp
+            dt = datetime.strptime(filename, in_strptime)
+            tstamp = np.datetime64(dt.isoformat())
+
+            # re-init vars
+            splitPrev, loggedCur, act_ids = [], [], ['(none)']
+
+            fileobj = open(filename, 'r')
+            print "\nFILE:",filename
+            for line in fileobj.readlines():
+                splitCur = line.split('|')
+
+                # line is starting new subject
+                if len(splitCur)==3:
+                    act_ids = ['(none)'] #re-init
+
+                # line shows activity_id
+                elif len(splitCur)==5 and splitCur[3]!="":
+                    act_ids.append(splitCur[3])
+
+                # line gives details on lock holder
+                elif len(splitCur)==6:
+
                     # find our relevant data
                     ptrec = int(splitCur[0].strip(' Z'))
                     procid, work = splitCur[5].split('^')[:2]
@@ -115,35 +116,59 @@ for filename in sorted(os.listdir('.')):
                     userid = int(userid)
                     secs = int(secs[ secs.find(',')+1 : secs.find('[') ])
                     app = splitCur[1].split(':')[0]
-                    
-                    # create data row
-                    row = pd.Series({ 'pt_record': ptrec,
-                                      'proc_id': procid,
-                                      'user_id': userid,
-                                      'workstation': work,
-                                      'app': app,
-                                      'activity': activity,
-                                      'first_seen': tstamp,
-                                      'last_seen': tstamp,
-                                      'total_min': 1,
-                                      'sec_since_midnight': secs })
-                    
-                    # TODO: call carryover func
-                    #if carryover returns id, edit it
-                    
-                    #else new record
-                    dframe = dframe.append(row, ignore_index=True)
-                    last_index = len(dframe)-1 #id for row we just added
-                    loggedCur.append(last_index) #remember it for next file loop
-                        
-            # line is empty
-            elif line.strip()=="":
-                continue
-        
-            # line format was unexpected
-            else:
-                print 'Unexpected line format: ',line
-                continue
-        
-        fileobj.close()
-        loggedPrev = loggedCur
+                    if debug: print "\n     ","Z"+str(ptrec),"#"+str(procid),"EMP"+str(userid),work,app,act_ids
+
+                    # check if this is a different lock which means we reset act_ids
+                    if (len(splitPrev) > 5) and not ( (splitCur[0]==splitPrev[0]) and
+                         (splitCur[1]==splitPrev[1]) and (splitCur[5]==splitPrev[5]) ):
+                        act_ids = ['(none)'] #re-init
+
+                    # locks for each activity are separate
+                    for act_id in act_ids:
+
+                        # lookup activity name
+                        if act_id.isdigit():
+                            activity = activity_names[int(act_id)]
+                        else:
+                            #sometimes this field has a text value
+                            activity = act_id
+
+                        # create data row
+                        row = pd.Series({ 'pt_record': ptrec,
+                                          'proc_id': procid,
+                                          'user_id': userid,
+                                          'workstation': work,
+                                          'app': app,
+                                          'activity': activity,
+                                          'first_seen': tstamp,
+                                          'last_seen': tstamp,
+                                          'total_min': 1,
+                                          'sec_since_midnight': secs })
+
+                        # see if this line is a carryover from the previous snapshot file
+                        result = carryover(row, dframe, loggedPrev)
+                        if result!=None: #update duration of existing record
+                            record = dframe.iloc[result]
+                            record['last_seen'] = tstamp
+                            record['total_min'] += 5
+                            if debug: print "      * updated previous record:",result,"for activity:",activity
+
+                        else: #create new record
+                            dframe = dframe.append(row, ignore_index=True)
+                            last_index = len(dframe)-1 #id for row we just added
+                            loggedCur.append(last_index) #remember it for next file loop
+                            if debug: print "      * new record:",last_index,"for activity:",activity
+
+                # line is empty
+                elif line.strip()=="":
+                    continue
+
+                # line format was unexpected
+                else:
+                    if debug: print 'Unexpected line format: ',line
+
+                # save previous split for comparison
+                splitPrev = splitCur
+
+            fileobj.close()
+            loggedPrev = loggedCur
