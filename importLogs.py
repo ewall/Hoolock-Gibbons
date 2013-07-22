@@ -30,6 +30,10 @@ from datetime import datetime
 
 # constants:
 debug = False
+
+logs_dir = '/Volumes/Spare Partition/LockLogs/week1'
+data_file = logs_dir + '/data/dframe.pickle'
+
 in_pattern = re.compile(r'\d{4}-\d{2}-\d{2}T\d{4}.txt', re.I)
 in_strptime = '%Y-%m-%dT%H%M.txt'
 
@@ -67,7 +71,7 @@ def carryover(s,df,ids):
 if __name__=="__main__":
 
     # check your path!
-    os.chdir('F:/dev/Hoolock-Gibbons/logs')
+    os.chdir(logs_dir)
 
     # read in activity_names lookup
     activity_names = defaultdict(lambda: 'UNKNOWN')
@@ -93,7 +97,7 @@ if __name__=="__main__":
             splitPrev, loggedCur, act_ids = [], [], ['(none)']
 
             fileobj = open(filename, 'r')
-            print "\nFILE:",filename
+            print "\nFILE:",filename,"started at",datetime.now().strftime("%H:%M:%S")
             for line in fileobj.readlines():
                 splitCur = line.split('|')
 
@@ -172,3 +176,8 @@ if __name__=="__main__":
 
             fileobj.close()
             loggedPrev = loggedCur
+
+    # save data in Python's pickle format
+    destdir = os.path.dirname(data_file)
+    if not os.path.exists(destdir): os.makedirs(destdir)
+    dframe.save(data_file)

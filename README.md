@@ -35,13 +35,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
 ## Usage
+- hulock_logging_script.m: edit paths as appropriate, paste into Caché prompt, leave session open to log every 5 minutes
 - renameLogs.py: rename from old unsortable names
 - importFiles.py: read in the logs and build a DataFrame
 
 
 ## TO DO
-- [X] rename files
-- [X] import/build DataFrame
-- [ ] save DataFrame in a reusable format
+- [x] rename files
+- [x] import/build DataFrame
+- [x] save DataFrame in a reusable format
 - [ ] first set of stats & charts
 - [ ] dig deeper into outliers
+- [ ] edit M script to use ISO date format
