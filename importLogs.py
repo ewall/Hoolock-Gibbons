@@ -31,7 +31,7 @@ from datetime import datetime
 # constants:
 debug = False
 
-logs_dir = '/Volumes/Spare Partition/LockLogs/test'
+logs_dir = '/Volumes/Spare Partition/LockLogs/week2'
 data_file = logs_dir + '/data/dframe.pickle'
 
 in_pattern = re.compile(r'\d{4}-\d{2}-\d{2}T\d{4}.txt', re.I)
@@ -39,10 +39,10 @@ in_strptime = '%Y-%m-%dT%H%M.txt'
 
 index_labels = ['pt_record', 'proc_id', 'user_id', 'workstation', 'app', 'activity',
                 'first_seen', 'last_seen', 'total_min', 'sec_since_midnight']
-data_types = [ ('pt_record', 'u4'),
+data_types = [ ('pt_record', 'S32'),
                ('proc_id', 'u4'),
-               ('user_id', 'u4'),
-               ('workstation', 'S32'),
+               ('user_id', 'S32'),
+               ('workstation', 'S24'),
                ('app', 'S16'),
                ('activity', 'S128'),
                ('first_seen', 'M8'),
@@ -70,8 +70,10 @@ def carryover(s,df,ids):
 
 if __name__=="__main__":
 
-    # check your path!
+    # path prep
     os.chdir(logs_dir)
+    destdir = os.path.dirname(data_file)
+    if not os.path.exists(destdir): os.makedirs(destdir)
 
     # read in activity_names lookup
     activity_names = defaultdict(lambda: 'UNKNOWN')
@@ -113,14 +115,13 @@ if __name__=="__main__":
                 elif len(splitCur)==6:
 
                     # find our relevant data
-                    ptrec = int(splitCur[0].strip(' Z'))
+                    ptrec = splitCur[0].strip()
                     procid, work = splitCur[5].split('^')[:2]
                     procid = int(procid)
                     userid, secs = splitCur[2].split('^')[:2]
-                    userid = int(userid)
                     secs = int(secs[ secs.find(',')+1 : secs.find('[') ])
                     app = splitCur[1].split(':')[0]
-                    if debug: print "\n     ","Z"+str(ptrec),"#"+str(procid),"EMP"+str(userid),work,app,act_ids
+                    if debug: print "\n     ",ptrec,"#"+str(procid),"EMP"+str(userid),work,app,act_ids
 
                     # check if this is a different lock which means we reset act_ids
                     if (len(splitPrev) > 5) and not ( (splitCur[0]==splitPrev[0]) and
@@ -176,9 +177,5 @@ if __name__=="__main__":
                 splitPrev = splitCur
 
             fileobj.close()
+            dframe.save(data_file) #pickle early, pickle often!
             loggedPrev = loggedCur
-
-    # save data in Python's pickle format
-    destdir = os.path.dirname(data_file)
-    if not os.path.exists(destdir): os.makedirs(destdir)
-    dframe.save(data_file)
