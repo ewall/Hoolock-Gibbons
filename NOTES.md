@@ -92,17 +92,19 @@ DATA STRUCTURES
 
 ### dframe: ([pandas.DataFrame](http://pandas.pydata.org/pandas-docs/stable/dsintro.html#dataframe))
 
-- (index) = unique incrementing integer id/index
+- (row index) = unique incrementing integer id/index
 - patient_record = patient record in lock contention
-- user_id = using holding the record open
+- user_id = using holding the record open ***
 - process_id = Hyperspace process number for blocking user
 - workstation = where Hyperspace process is coming from
 - app = Epic app (marginally useful)
-- activity = activity/workflow being blocked
+- activity = activity/workflow being blocked (not multi-valued like previously planned) ***
 - first_seen = timestamp of the first file with this lock
 - last_seen = timestamp of the last file with this lock (may be same as first_seen)
 - total_minutes = time in minutes (convenience entry)
 - seconds_since_midnight = useful for easy grouping by shifts? (only stored with first_seen time)
+
+*** surprise! sometiems (rarely) this field is a Str instead of an Int!
 
 ### activities:
 (see `activities.csv`, first line is labels)
